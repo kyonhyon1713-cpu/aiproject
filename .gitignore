@@ -1,0 +1,12 @@
+# Arduino CLI generated build outputs
+**/build/
+
+# Agent authoring/runtime files installed for this workspace
+.agents/skills/skill-creator/
+skills-lock.json
+
+# Local MQTT/Wi-Fi configuration contains private network credentials.
+PROTOCOL.md
+TEAM_PROTOCOL.md
+teamNode.ino
+teamNode/
