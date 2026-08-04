@@ -23,7 +23,9 @@ ESP32-S3에서 센서 데이터를 읽고, 브라우저에서 데이터셋으로
 | `03-camera-ai` | 카메라 분류 학습 리포트와 Arduino 모델 라이브러리 ZIP |
 | `04-image-dataset` | battery/fan 원본 이미지 데이터셋 |
 | `05-webppt` | 수업 WebPPT, 화면 이미지, 원본 실습 영상 |
-| `06-existing-repo-notes` | 기존 저장소에 먼저 올렸던 ESP32/BLE 문서와 스케치 |
+
+어제 학습 자료인 ESP32/BLE 문서와 스케치는 날짜 폴더 밖의
+[`06-existing-repo-notes`](../06-existing-repo-notes/)에 보관했다.
 
 ## 영상 보기
 
