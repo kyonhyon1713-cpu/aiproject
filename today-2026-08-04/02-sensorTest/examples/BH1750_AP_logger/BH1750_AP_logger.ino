@@ -5,7 +5,7 @@
  * displays live lux values, groups 30 one-second readings into one time-series
  * sample, and creates an Edge Impulse-ready ZIP file when requested.
  *
- * AP: bkh / 11112222
+ * AP: bkh / set your local password before flashing
  * URL: http://192.168.4.1
  * BH1750/GY-302 address: 0x23
  * SDA: GPIO5 (D4), SCL: GPIO6 (D5)
@@ -194,7 +194,9 @@ void setup() {
   sensorReady = beginBH1750();
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("bkh", "11112222", 1);
+  // Set the local password before flashing. The public copy intentionally
+  // does not contain the password used during the practice.
+  WiFi.softAP("bkh", "YOUR_AP_PASSWORD", 1);
 
   server.on("/", handleRoot);
   server.on("/data", handleData);

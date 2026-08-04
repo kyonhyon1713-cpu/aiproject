@@ -44,3 +44,14 @@ python -m pip install -r requirements.txt
 
 스크립트는 이제 이 날짜 폴더 안의 CSV, 이미지, 학습 리포트, WebPPT 화면을 사용하므로
 원래의 `C:\arduinoTest` 경로가 없어도 자료 폴더를 복사한 상태에서 재현할 수 있다.
+
+## 추가 실습 기록
+
+원격에서 먼저 정리된 자료도 보존했다.
+
+- `docs/today-2026-08-04.md`: 이미지 추론·센서·BH1750 실습 상세 기록
+- `03-camera-ai/xiao_webcam_ap_infer.ino`: XIAO ESP32-S3 Sense AP 카메라 추론 스케치
+- `02-sensorTest/`: 비밀번호를 비워 둔 공개용 센서 예제와 CSV 샘플
+
+카메라·센서 스케치의 AP 비밀번호는 공개 저장소에 넣지 않고
+`YOUR_AP_PASSWORD` 자리표시자로 관리한다. 실제 보드에 업로드하기 전에 로컬 값으로 바꾼다.
