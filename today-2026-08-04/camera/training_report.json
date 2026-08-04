@@ -1,0 +1,92 @@
+{
+  "project": {
+    "id": 1078275,
+    "name": "EI project"
+  },
+  "task": "image-classification",
+  "labels": {
+    "battery": 154,
+    "fan": 150
+  },
+  "dataset": {
+    "total": 304,
+    "training": 241,
+    "testing": 63,
+    "split": "79% training / 21% testing"
+  },
+  "impulse": {
+    "imageWidth": 96,
+    "imageHeight": 96,
+    "resizeMode": "squash",
+    "learningBlock": "keras-transfer-image"
+  },
+  "training": {
+    "cycles": 20,
+    "learningRate": 0.0005,
+    "bestValidationAccuracy": 1.0,
+    "initialValidationAccuracy": 0.7959,
+    "finalValidationAccuracy": 1.0,
+    "note": "Latest completed training job reached 100% final validation accuracy; evaluate with new camera images before relying on the model."
+  },
+  "edgeImpulseJobs": {
+    "generateFeatures": 52151386,
+    "train": 52151406,
+    "modelTesting": 52151647,
+    "buildArduinoDeployment": 52150906
+  },
+  "modelTesting": {
+    "dataset": "testing",
+    "samples": 63,
+    "completed": "2026-08-04",
+    "variants": {
+      "int8": {
+        "good": 50,
+        "bad": 13,
+        "accuracy": 0.7936507936507937,
+        "confusionMatrix": {
+          "battery": {
+            "battery": 14,
+            "fan": 7,
+            "uncertain": 6
+          },
+          "fan": {
+            "battery": 0,
+            "fan": 36,
+            "uncertain": 0
+          }
+        },
+        "rocAuc": 0.8518518518518519,
+        "weightedPrecision": 0.8961038961038961,
+        "weightedRecall": 0.873015873015873,
+        "weightedF1": 0.8683229813664597
+      },
+      "float32": {
+        "good": 63,
+        "bad": 0,
+        "accuracy": 1.0,
+        "confusionMatrix": {
+          "battery": {
+            "battery": 27,
+            "fan": 0,
+            "uncertain": 0
+          },
+          "fan": {
+            "battery": 0,
+            "fan": 36,
+            "uncertain": 0
+          }
+        },
+        "rocAuc": 1.0,
+        "weightedPrecision": 1.0,
+        "weightedRecall": 1.0,
+        "weightedF1": 1.0
+      }
+    },
+    "note": "Studio Model testing was run against the project's 63-sample testing split."
+  },
+  "artifact": {
+    "file": "battery-fan-classifier-arduino.zip",
+    "library": "EI_project_inferencing"
+  },
+  "created": "2026-08-04"
+}

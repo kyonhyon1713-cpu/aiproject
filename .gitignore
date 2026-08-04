@@ -10,3 +10,12 @@ PROTOCOL.md
 TEAM_PROTOCOL.md
 teamNode.ino
 teamNode/
+
+# Local camera collector contains the AP password; captured photos/ZIPs stay local.
+xiao_webcam_ap_collect/
+camera_dataset/*.jpg
+camera_dataset/*.zip
+
+# Edge Impulse credentials and local training data.
+.env
+dataset/
