@@ -10,3 +10,10 @@ PROTOCOL.md
 TEAM_PROTOCOL.md
 teamNode.ino
 teamNode/
+
+# Local Netlify project linkage
+.netlify/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]

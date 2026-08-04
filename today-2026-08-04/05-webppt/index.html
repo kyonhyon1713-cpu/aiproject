@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10211c">
+  <title>빛·화면·데이터로 배우는 TinyML</title>
+  <style>
+    :root {
+      --ink: #14231e;
+      --muted: #6d7c74;
+      --paper: #f4f1e9;
+      --paper-2: #fbfaf5;
+      --line: rgba(20, 35, 30, .14);
+      --green: #b9f35a;
+      --green-deep: #437f49;
+      --blue: #5ba7ff;
+      --orange: #ff7b46;
+      --yellow: #f6ca4c;
+      --dark: #10211c;
+      --dark-2: #1a332a;
+      --white: #fffdf7;
+      --shadow: 0 18px 60px rgba(21, 35, 30, .13);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: var(--dark);
+      color: var(--ink);
+      font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; }
+    code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+
+    .deck { position: relative; width: 100%; height: 100%; isolation: isolate; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(16px, 2.4vw, 34px);
+      padding: clamp(28px, 4.5vw, 72px) clamp(28px, 6.5vw, 108px) clamp(42px, 5vw, 72px);
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .slide.active {
+      display: grid;
+      animation: slideIn .55s cubic-bezier(.2, .75, .2, 1) both;
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      opacity: .52;
+      background-image: linear-gradient(rgba(20,35,30,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(20,35,30,.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 88%);
+      pointer-events: none;
+    }
+    .slide::after {
+      content: "";
+      position: absolute;
+      width: 34vw;
+      height: 34vw;
+      right: -15vw;
+      top: -17vw;
+      border-radius: 50%;
+      background: rgba(185,243,90,.24);
+      filter: blur(2px);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .slide.dark { background: var(--dark); color: var(--white); }
+    .slide.dark::before { background-image: linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px); }
+    .slide.dark::after { background: rgba(91,167,255,.18); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(18px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(.94); opacity: .75; } 50% { transform: scale(1.08); opacity: 1; } }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--green-deep);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .dark .eyebrow { color: var(--green); }
+    .eyebrow::before { content: ""; width: 28px; height: 2px; background: currentColor; }
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      max-width: 850px;
+      font-size: clamp(42px, 7vw, 106px);
+      line-height: .98;
+      letter-spacing: -.07em;
+      font-weight: 850;
+    }
+    h2 {
+      max-width: 850px;
+      font-size: clamp(30px, 4.1vw, 62px);
+      line-height: 1.05;
+      letter-spacing: -.065em;
+      font-weight: 850;
+    }
+    h3 { font-size: clamp(17px, 1.55vw, 24px); line-height: 1.1; letter-spacing: -.045em; }
+    h1 em, h2 em { color: var(--orange); font-style: normal; }
+    .dark h1 em, .dark h2 em { color: var(--green); }
+    .lede {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: clamp(15px, 1.45vw, 21px);
+      line-height: 1.55;
+      letter-spacing: -.03em;
+    }
+    .dark .lede { color: rgba(255,253,247,.68); }
+    .slide-head { display: flex; align-items: end; justify-content: space-between; gap: 32px; }
+    .slide-head .lede { max-width: 360px; padding-bottom: 4px; }
+    .source {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .02em;
+      line-height: 1.4;
+    }
+    .dark .source { color: rgba(255,253,247,.42); }
+    .accent-line { display: block; width: 72px; height: 5px; margin: 18px 0; border-radius: 99px; background: var(--orange); }
+
+    /* Cover */
+    .cover { grid-template-rows: 1fr auto; }
+    .cover-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); align-items: center; gap: 5vw; min-height: 0; }
+    .cover-copy { display: grid; gap: 24px; }
+    .cover-copy .lede { max-width: 560px; }
+    .cover-meta { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 12px; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 99px; color: rgba(255,255,255,.72); font-size: 12px; }
+    .tag b { color: var(--green); font-weight: 800; }
+    .hero-visual { position: relative; display: grid; place-items: center; min-height: 420px; }
+    .orbit { position: absolute; width: min(34vw, 420px); aspect-ratio: 1; border: 1px solid rgba(185,243,90,.22); border-radius: 50%; }
+    .orbit::before, .orbit::after { content: ""; position: absolute; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 7px rgba(185,243,90,.1), 0 0 34px rgba(185,243,90,.65); }
+    .orbit::before { width: 10px; height: 10px; top: 18%; left: 7%; animation: pulse 2.6s ease-in-out infinite; }
+    .orbit::after { width: 7px; height: 7px; right: 13%; bottom: 14%; background: var(--blue); box-shadow: 0 0 0 7px rgba(91,167,255,.1), 0 0 28px rgba(91,167,255,.7); }
+    .orbit-a { transform: rotate(23deg) scale(.82); }
+    .orbit-b { transform: rotate(-42deg) scale(1.12); border-color: rgba(91,167,255,.16); }
+    .board-card { position: relative; width: min(30vw, 340px); aspect-ratio: 1.25; padding: 28px; border: 1px solid rgba(255,255,255,.18); border-radius: 28px; background: linear-gradient(135deg, #244638, #132b22 75%); box-shadow: 0 30px 80px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.13); transform: rotate(-4deg); animation: float 6s ease-in-out infinite; }
+    .board-card::after { content: ""; position: absolute; inset: 14px; border: 1px dashed rgba(185,243,90,.25); border-radius: 18px; pointer-events: none; }
+    .camera-dot { width: 84px; height: 84px; display: grid; place-items: center; border-radius: 50%; background: #0a1712; border: 8px solid #345b46; box-shadow: inset 0 0 0 6px #172d24, 0 0 22px rgba(91,167,255,.34); }
+    .camera-dot span { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d9f5ff 0 12%, #5ba7ff 21%, #102b36 65%); box-shadow: 0 0 12px #5ba7ff; }
+    .board-label { position: absolute; top: 31px; right: 30px; color: var(--white); font-size: 20px; line-height: 1.1; letter-spacing: .08em; font-weight: 800; }
+    .board-label small { color: var(--green); font-size: 10px; letter-spacing: .2em; }
+    .pin-row { position: absolute; bottom: 30px; left: 28px; right: 28px; display: flex; gap: 8px; }
+    .pin-row i { display: block; width: 23px; height: 6px; border-radius: 5px; background: rgba(185,243,90,.6); }
+    .pin-row i:nth-child(2n) { background: rgba(91,167,255,.6); }
+    .cover-footer { display: flex; justify-content: space-between; gap: 24px; align-items: end; }
+
+    /* Shared pieces */
+    .panel { background: rgba(255,253,247,.8); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .dark .panel { background: rgba(255,255,255,.055); border-color: rgba(255,255,255,.13); box-shadow: none; }
+    .number { color: var(--orange); font-size: 13px; font-weight: 850; letter-spacing: .1em; }
+    .dark .number { color: var(--green); }
+    .micro { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .dark .micro { color: rgba(255,253,247,.55); }
+    .pill { display: inline-flex; align-items: center; padding: 7px 10px; border-radius: 99px; background: rgba(185,243,90,.17); color: var(--green-deep); font-size: 12px; font-weight: 800; }
+    .dark .pill { color: var(--green); background: rgba(185,243,90,.1); }
+    .pill.blue { background: rgba(91,167,255,.14); color: #2874b9; }
+    .pill.orange { background: rgba(255,123,70,.14); color: #c8532b; }
+    .big-number { font-size: clamp(38px, 5vw, 74px); line-height: .9; letter-spacing: -.08em; font-weight: 850; }
+    .big-number small { display: block; margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.2; letter-spacing: .01em; font-weight: 700; }
+    .dark .big-number small { color: rgba(255,253,247,.55); }
+
+    /* Slide 2 */
+    .pipeline { display: grid; grid-template-columns: repeat(3, 1fr); align-items: stretch; gap: 18px; min-height: 0; }
+    .pipeline-card { position: relative; display: grid; align-content: space-between; gap: 12px; padding: clamp(20px, 2vw, 28px); border-radius: var(--radius); overflow: visible; background: var(--paper-2); border: 1px solid var(--line); }
+    .pipeline-card::after { content: "→"; position: absolute; top: 50%; right: -22px; z-index: 4; display: grid; place-items: center; width: 43px; height: 43px; border-radius: 50%; background: var(--dark); color: var(--green); font-size: 22px; transform: translateY(-50%); box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+    .pipeline-card:nth-child(1) { z-index: 3; }
+    .pipeline-card:nth-child(2) { z-index: 2; }
+    .pipeline-card:nth-child(3) { z-index: 1; }
+    .pipeline-card:last-child::after { display: none; }
+    .pipeline-card:nth-child(1) { background: #eaf3e3; }
+    .pipeline-card:nth-child(2) { background: #fff0e7; }
+    .pipeline-card:nth-child(3) { background: #e8f1fb; }
+    .pipeline-icon { display: flex; justify-content: space-between; align-items: start; font-size: 36px; }
+    .pipeline-card h3 { font-size: clamp(22px, 2.3vw, 36px); }
+    .pipeline-card p { color: var(--muted); font-size: clamp(12px, 1.05vw, 15px); line-height: 1.35; }
+    .question-band { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 17px 22px; border-radius: 16px; background: var(--dark); color: var(--white); }
+    .question-band strong { color: var(--green); font-size: clamp(17px, 1.8vw, 27px); letter-spacing: -.04em; }
+    .question-band span { color: rgba(255,255,255,.56); font-size: 12px; }
+    section[data-title="오늘의 질문"] .pipeline { position: relative; z-index: 1; padding-bottom: 10px; }
+    section[data-title="오늘의 질문"] .question-band { position: relative; z-index: 10; }
+
+    /* Slide 3 */
+    .sense-map { display: grid; grid-template-columns: 1fr minmax(170px, .7fr) 1fr; align-items: center; gap: 24px; min-height: 0; }
+    .sense-column { display: grid; gap: 14px; }
+    .sense-card { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,253,247,.77); }
+    .sense-card .sensor-symbol { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px; background: var(--dark); color: var(--green); font-size: 23px; }
+    .sense-card h3 { margin-bottom: 5px; font-size: 17px; }
+    .sense-card p { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .sense-center { position: relative; display: grid; place-items: center; min-height: 260px; }
+    .sense-center::before, .sense-center::after { content: ""; position: absolute; height: 1px; width: 35%; background: var(--green-deep); opacity: .55; }
+    .sense-center::before { left: -13%; }
+    .sense-center::after { right: -13%; }
+    .mini-board { display: grid; place-items: center; gap: 10px; width: 160px; height: 210px; border-radius: 24px; color: var(--white); background: var(--dark); box-shadow: 0 20px 42px rgba(16,33,28,.23); transform: rotate(3deg); }
+    .mini-board .camera-dot { width: 58px; height: 58px; border-width: 5px; }
+    .mini-board .camera-dot span { width: 17px; height: 17px; }
+    .mini-board b { font-size: 15px; letter-spacing: .08em; }
+    .mini-board small { color: var(--green); font-size: 9px; letter-spacing: .15em; }
+    .connection-label { position: absolute; top: 16px; padding: 7px 10px; border-radius: 99px; background: rgba(67,127,73,.11); color: var(--green-deep); font-size: 11px; font-weight: 800; }
+    .sense-bottom { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 14px; }
+    .stat-chip { padding: 16px 18px; border-radius: 16px; background: var(--dark); color: var(--white); }
+    .stat-chip b { display: block; color: var(--green); font-size: 22px; letter-spacing: -.05em; }
+    .stat-chip span { display: block; margin-top: 5px; color: rgba(255,255,255,.58); font-size: 11px; }
+
+    /* Slide 4 */
+    .split { display: grid; grid-template-columns: minmax(260px, .88fr) minmax(0, 1.12fr); gap: clamp(22px, 4vw, 62px); align-items: center; min-height: 0; }
+    .capture-frame { position: relative; width: min(100%, 460px); margin: 0 auto; padding: 12px; border-radius: 22px; background: var(--dark); box-shadow: var(--shadow); }
+    .capture-frame img { display: block; width: 100%; aspect-ratio: 1.2; object-fit: cover; border-radius: 12px; }
+    .capture-frame::after { content: "LIVE INFERENCE"; position: absolute; right: -11px; bottom: 27px; padding: 8px 11px; border-radius: 5px; background: var(--green); color: var(--dark); font-size: 10px; font-weight: 900; letter-spacing: .12em; transform: rotate(2deg); }
+    .dataset-copy { display: grid; gap: 20px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
+    .metric { padding: 16px; border-radius: 16px; background: rgba(255,253,247,.85); border: 1px solid var(--line); }
+    .metric b { display: block; font-size: clamp(27px, 3.2vw, 46px); line-height: .95; letter-spacing: -.08em; }
+    .metric span { display: block; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.25; }
+    .dataset-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .dataset-step { padding-top: 14px; border-top: 2px solid var(--orange); }
+    .dataset-step b { display: block; font-size: 15px; }
+    .dataset-step span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+
+    /* Learning slides */
+    .ei-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: clamp(22px, 4vw, 60px); align-items: center; min-height: 0; }
+    .ei-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: stretch; }
+    .ei-step { position: relative; display: grid; align-content: space-between; gap: 17px; min-height: 220px; padding: 18px; border-radius: 18px; background: var(--dark); color: var(--white); overflow: hidden; }
+    .ei-step::after { content: "→"; position: absolute; top: 18px; right: 12px; color: rgba(255,255,255,.33); font-size: 19px; }
+    .ei-step:last-child::after { content: "✓"; color: var(--green); }
+    .ei-step:nth-child(2) { background: #244638; }
+    .ei-step:nth-child(3) { background: #315a4b; }
+    .ei-step:nth-child(4) { background: #3e735d; }
+    .ei-step:nth-child(5) { background: var(--orange); }
+    .ei-step .step-no { color: var(--green); font: 800 11px "SFMono-Regular", Consolas, monospace; }
+    .ei-step:nth-child(5) .step-no { color: var(--dark); }
+    .ei-step h3 { font-size: 18px; }
+    .ei-step p { color: rgba(255,255,255,.65); font-size: 11px; line-height: 1.45; }
+    .ei-step:nth-child(5) p { color: rgba(16,33,28,.72); }
+    .ei-note { display: grid; gap: 17px; padding: 23px; border-radius: var(--radius); background: #e9f2df; border: 1px solid rgba(67,127,73,.16); }
+    .ei-note h3 { color: var(--green-deep); }
+    .ei-note p { color: #526a5b; font-size: 13px; line-height: 1.55; }
+    .ei-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .ei-spec { padding: 12px; border-radius: 12px; background: rgba(255,253,247,.82); }
+    .ei-spec b { display: block; color: var(--dark); font-size: 16px; }
+    .ei-spec span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.3; }
+
+    .feature-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: clamp(22px, 4vw, 60px); align-items: center; min-height: 0; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .feature-card { display: grid; grid-template-columns: auto 1fr; gap: 13px; align-items: center; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,253,247,.84); }
+    .feature-card .feature-icon { display: grid; place-items: center; width: 43px; height: 43px; border-radius: 13px; background: var(--dark); color: var(--green); font-size: 20px; }
+    .feature-card:nth-child(2) .feature-icon { color: var(--blue); }
+    .feature-card:nth-child(3) .feature-icon { color: var(--orange); }
+    .feature-card:nth-child(4) .feature-icon { color: var(--yellow); }
+    .feature-card:nth-child(5) .feature-icon { color: var(--green); }
+    .feature-card h3 { font-size: 16px; }
+    .feature-card p { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .spec-ribbon { position: relative; display: grid; gap: 18px; padding: 27px; border-radius: var(--radius); background: var(--dark); color: var(--white); overflow: hidden; }
+    .spec-ribbon::after { content: "ESP32-S3"; position: absolute; right: -10px; bottom: -13px; color: rgba(185,243,90,.12); font-size: 60px; font-weight: 900; letter-spacing: -.08em; }
+    .spec-ribbon .pill { width: fit-content; }
+    .spec-ribbon h3 { position: relative; z-index: 1; color: var(--green); font-size: 28px; }
+    .spec-ribbon p { position: relative; z-index: 1; max-width: 270px; color: rgba(255,255,255,.65); font-size: 13px; line-height: 1.55; }
+    .spec-ribbon .spec-list { position: relative; z-index: 1; display: grid; gap: 8px; color: rgba(255,255,255,.82); font-size: 12px; }
+    .spec-ribbon .spec-list span::before { content: "＋"; margin-right: 7px; color: var(--green); }
+
+    .service-layout { display: grid; grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr); gap: clamp(22px, 4vw, 60px); align-items: center; min-height: 0; }
+    .service-hero { position: relative; display: grid; place-items: center; min-height: 270px; padding: 25px; border-radius: var(--radius); background: var(--dark); color: var(--white); overflow: hidden; box-shadow: var(--shadow); }
+    .service-hero::before { content: ""; position: absolute; width: 260px; height: 260px; border: 1px solid rgba(185,243,90,.25); border-radius: 50%; box-shadow: 0 0 0 35px rgba(185,243,90,.035), 0 0 0 70px rgba(185,243,90,.025); }
+    .service-hero .wifi-mark { position: relative; z-index: 1; font-size: 70px; line-height: .9; color: var(--green); }
+    .service-hero b { position: relative; z-index: 1; margin-top: 12px; font-size: 30px; letter-spacing: .1em; }
+    .service-hero code { position: relative; z-index: 1; margin-top: 7px; color: rgba(255,255,255,.62); font-size: 13px; }
+    .service-hero small { position: absolute; left: 22px; bottom: 19px; color: rgba(255,255,255,.42); font-size: 10px; letter-spacing: .08em; }
+    .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .service-card { display: grid; align-content: center; gap: 9px; min-height: 124px; padding: 18px; border-radius: 17px; background: rgba(255,253,247,.84); border: 1px solid var(--line); }
+    .service-card b { display: block; font-size: 17px; letter-spacing: -.04em; }
+    .service-card p { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .service-card .service-tag { color: var(--orange); font: 800 10px "SFMono-Regular", Consolas, monospace; }
+
+    .phone-layout { display: grid; grid-template-columns: minmax(250px, .75fr) minmax(0, 1.25fr); gap: clamp(25px, 5vw, 75px); align-items: start; min-height: 0; }
+    .phone-shell { position: relative; width: auto; height: clamp(310px, 49vh, 430px); aspect-ratio: .56; margin: 10px auto 0; padding: 10px; border: 7px solid #202a27; border-radius: 35px; background: #080d0b; box-shadow: 0 25px 45px rgba(16,33,28,.25); }
+    .phone-shell::before { content: ""; position: absolute; left: 50%; top: 6px; z-index: 2; width: 80px; height: 16px; border-radius: 0 0 12px 12px; background: #202a27; transform: translateX(-50%); }
+    .phone-shell::after { content: "LIVE"; position: absolute; right: 18px; top: 20px; z-index: 2; padding: 4px 7px; border-radius: 5px; background: var(--orange); color: var(--white); font: 900 9px "SFMono-Regular", Consolas, monospace; letter-spacing: .08em; }
+    .phone-screen { width: 100%; height: 100%; overflow: hidden; border-radius: 23px; background: #0d1110; }
+    .phone-screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .live-copy { display: grid; gap: 17px; }
+    .live-copy h3 { font-size: clamp(21px, 2.2vw, 34px); }
+    .live-copy .lede { max-width: 600px; }
+    .live-steps { display: grid; gap: 9px; }
+    .live-step { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; padding: 11px 14px; border-radius: 13px; background: rgba(255,253,247,.84); border: 1px solid var(--line); }
+    .live-step i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--dark); color: var(--green); font-style: normal; font-size: 11px; font-weight: 900; }
+    .live-step span { color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .live-step span b { color: var(--ink); }
+    .live-copy .video-card { height: 155px; min-height: 0; }
+    .live-copy .video-card video { height: 100%; min-height: 0; object-fit: cover; }
+
+    /* Slide 5 */
+    .model-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(270px, .9fr); gap: clamp(22px, 4vw, 60px); align-items: center; min-height: 0; }
+    .accuracy-card { padding: clamp(22px, 3vw, 40px); border-radius: var(--radius); background: var(--dark); color: var(--white); box-shadow: 0 22px 45px rgba(16,33,28,.18); }
+    .accuracy-card h3 { color: var(--green); margin-bottom: 25px; }
+    .bar-list { display: grid; gap: 22px; }
+    .bar-row { display: grid; grid-template-columns: 76px 1fr 56px; gap: 13px; align-items: center; }
+    .bar-row label { color: rgba(255,255,255,.68); font-size: 12px; }
+    .bar-track { height: 14px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.14); }
+    .bar-fill { height: 100%; border-radius: inherit; background: var(--green); }
+    .bar-fill.blue { background: var(--blue); }
+    .bar-fill.orange { background: var(--orange); }
+    .bar-row b { color: var(--white); text-align: right; font-size: 15px; }
+    .bar-caption { display: flex; justify-content: space-between; gap: 14px; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.5); font-size: 11px; }
+    .model-note { display: grid; gap: 20px; }
+    .warning-card { padding: 21px; border-radius: 18px; background: #fff0e7; border: 1px solid rgba(255,123,70,.25); }
+    .warning-card strong { display: block; margin-bottom: 8px; color: #bf4c28; font-size: 18px; }
+    .warning-card p { color: #725243; font-size: 13px; line-height: 1.55; }
+    .confusion { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .confusion .cell { padding: 13px; border-radius: 14px; background: rgba(255,253,247,.84); border: 1px solid var(--line); }
+    .confusion .cell b { display: block; font-size: 22px; }
+    .confusion .cell span { color: var(--muted); font-size: 11px; }
+
+    /* Slide 6 */
+    .media-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr); gap: 22px; min-height: 0; align-items: stretch; }
+    .media-main { display: grid; place-items: center; padding: 16px; border-radius: var(--radius); background: #0b0b0b; box-shadow: var(--shadow); min-height: 0; }
+    .media-main img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 9px; }
+    .media-side { display: grid; grid-template-rows: 1fr auto; gap: 16px; min-height: 0; }
+    .video-card { display: grid; grid-template-rows: auto 1fr; gap: 10px; min-height: 0; padding: 17px; border-radius: var(--radius); background: var(--dark); color: var(--white); }
+    .video-card h3 { color: var(--green); font-size: 17px; }
+    .video-card video { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: 11px; background: #060a08; }
+    .latency-card { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; border-radius: 18px; background: #e8f1fb; }
+    .latency-card b { display: block; font-size: 22px; letter-spacing: -.06em; }
+    .latency-card span { display: block; margin-top: 4px; color: #55708b; font-size: 11px; }
+
+    /* Slide 7 */
+    .sensor-layout { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr); gap: clamp(22px, 4vw, 62px); align-items: center; min-height: 0; }
+    .bus-board { position: relative; min-height: 330px; padding: 24px; border-radius: var(--radius); background: #e4efe1; border: 1px solid rgba(67,127,73,.18); overflow: hidden; }
+    .bus-board::before { content: "I²C BUS"; position: absolute; top: 20px; right: 23px; color: rgba(67,127,73,.5); font-size: 11px; font-weight: 900; letter-spacing: .16em; }
+    .xiao-block { position: absolute; left: 11%; top: 31%; display: grid; place-items: center; width: 125px; height: 150px; border-radius: 20px; background: var(--dark); color: var(--white); box-shadow: 0 18px 28px rgba(16,33,28,.18); transform: rotate(-4deg); }
+    .xiao-block b { font-size: 13px; letter-spacing: .07em; }
+    .xiao-block small { color: var(--green); font-size: 8px; letter-spacing: .12em; }
+    .xiao-block::after { content: "D4 / GPIO5  SDA\A D5 / GPIO6  SCL"; white-space: pre; position: absolute; left: calc(100% + 24px); top: 41px; color: var(--green-deep); font: 700 11px/2 "SFMono-Regular", Consolas, monospace; }
+    .bus-lines { position: absolute; left: 42%; right: 11%; top: 40%; display: grid; gap: 28px; }
+    .bus-line { position: relative; height: 3px; background: var(--green-deep); border-radius: 10px; }
+    .bus-line::before { content: ""; position: absolute; left: -7px; top: -4px; width: 11px; height: 11px; border-radius: 50%; background: var(--orange); }
+    .bus-line span { position: absolute; right: 0; top: -30px; padding: 7px 9px; border-radius: 8px; background: var(--paper-2); color: var(--green-deep); font: 800 11px "SFMono-Regular", Consolas, monospace; }
+    .sensor-stack { display: grid; gap: 12px; }
+    .sensor-row { display: grid; grid-template-columns: 92px 1fr auto; gap: 15px; align-items: center; padding: 17px 19px; border-radius: 16px; background: rgba(255,253,247,.86); border: 1px solid var(--line); }
+    .sensor-row b { color: var(--dark); font-size: 15px; }
+    .sensor-row span { color: var(--muted); font-size: 12px; }
+    .sensor-row code { color: var(--orange); font-size: 13px; font-weight: 800; }
+    .sensor-caption { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    /* Slide 8 */
+    .light-layout { display: grid; grid-template-columns: minmax(260px, .85fr) minmax(0, 1.15fr); gap: clamp(22px, 4vw, 62px); align-items: center; min-height: 0; }
+    .logger-shot { width: 100%; max-width: 490px; margin: 0 auto; padding: 9px; border-radius: 20px; background: var(--white); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .logger-shot img { display: block; width: 100%; border-radius: 12px; }
+    .light-copy { display: grid; gap: 18px; }
+    .light-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .light-stats .metric { padding: 14px; }
+    .light-stats .metric b { font-size: clamp(25px, 2.5vw, 38px); }
+    .chart-card { padding: 16px 18px 12px; border-radius: 18px; background: #edf5e9; border: 1px solid rgba(67,127,73,.16); }
+    .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .chart-head b { font-size: 13px; }
+    .chart-head span { color: var(--green-deep); font: 700 11px "SFMono-Regular", Consolas, monospace; }
+    .chart-card svg { display: block; width: 100%; height: 120px; overflow: visible; }
+    .chart-card .grid-line { stroke: rgba(67,127,73,.16); stroke-width: 1; }
+    .chart-card .area { fill: rgba(67,127,73,.12); }
+    .chart-card .line { fill: none; stroke: var(--green-deep); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-card .dot { fill: var(--orange); }
+    .chart-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+
+    /* Slide 9 */
+    .rules-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; min-height: 0; }
+    .rule-card { display: grid; align-content: space-between; gap: 18px; padding: 20px; border-radius: 19px; background: rgba(255,253,247,.82); border: 1px solid var(--line); }
+    .rule-card .rule-no { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--dark); color: var(--green); font-size: 13px; font-weight: 900; }
+    .rule-card h3 { font-size: 19px; }
+    .rule-card p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .pitfall-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .pitfall { padding: 17px 20px; border-left: 4px solid var(--orange); border-radius: 12px; background: #fff0e7; }
+    .pitfall b { display: block; color: #b84e2c; font-size: 14px; }
+    .pitfall span { display: block; margin-top: 5px; color: #725243; font-size: 11px; line-height: 1.45; }
+
+    /* Slide 10 */
+    .lesson-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: stretch; min-height: 0; }
+    .shape-card { position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 16px; padding: 24px; border-radius: var(--radius); background: var(--dark); color: var(--white); overflow: hidden; }
+    .shape-card::after { content: ""; position: absolute; width: 190px; height: 190px; right: -80px; bottom: -80px; border-radius: 50%; background: rgba(185,243,90,.18); }
+    .shape-card h3 { color: var(--green); }
+    .data-bars { display: grid; align-content: center; gap: 15px; }
+    .data-bar { display: grid; grid-template-columns: 90px 1fr 48px; gap: 12px; align-items: center; }
+    .data-bar label { color: rgba(255,255,255,.58); font-size: 11px; }
+    .data-bar i { display: block; height: 11px; border-radius: 99px; background: var(--green); }
+    .data-bar:nth-child(2) i { width: 72%; background: var(--blue); }
+    .data-bar:nth-child(3) i { width: 45%; background: var(--orange); }
+    .data-bar b { color: rgba(255,255,255,.8); text-align: right; font-size: 12px; }
+    .shape-card .micro { position: relative; z-index: 1; }
+    .takeaways { display: grid; align-content: center; gap: 13px; }
+    .takeaway { display: grid; grid-template-columns: 45px 1fr; gap: 14px; align-items: center; padding: 17px; border-radius: 17px; background: rgba(255,253,247,.83); border: 1px solid var(--line); }
+    .takeaway strong { display: block; font-size: 16px; }
+    .takeaway span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .takeaway .mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--orange); color: var(--white); font-weight: 900; }
+    .takeaway:nth-child(2) .mark { background: var(--blue); }
+    .takeaway:nth-child(3) .mark { background: var(--green-deep); }
+
+    /* Slide 11 */
+    .runway { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; align-items: stretch; min-height: 0; }
+    .runway::before { content: ""; position: absolute; left: 9%; right: 9%; top: 42px; height: 2px; background: var(--line); }
+    .run-step { position: relative; display: grid; align-content: start; gap: 13px; padding: 0 13px; }
+    .run-step .circle { position: relative; z-index: 1; display: grid; place-items: center; width: 84px; height: 84px; margin: 0 auto; border-radius: 50%; background: var(--dark); color: var(--green); font-size: 23px; box-shadow: 0 0 0 8px var(--paper), 0 0 0 9px var(--line); }
+    .run-step:nth-child(2) .circle { color: var(--blue); }
+    .run-step:nth-child(3) .circle { color: var(--orange); }
+    .run-step:nth-child(4) .circle { color: var(--yellow); }
+    .run-step:nth-child(5) .circle { color: var(--green); }
+    .run-step h3 { text-align: center; font-size: 16px; }
+    .run-step p { color: var(--muted); text-align: center; font-size: 11px; line-height: 1.45; }
+    .command-band { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .command { padding: 16px 18px; border-radius: 15px; background: var(--dark); color: var(--white); overflow: hidden; }
+    .command span { display: block; margin-bottom: 7px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .11em; }
+    .command code { display: block; color: rgba(255,255,255,.76); font-size: 11px; line-height: 1.5; white-space: nowrap; }
+
+    /* End */
+    .end { align-content: center; }
+    .end-content { display: grid; grid-template-columns: 1fr .8fr; gap: 6vw; align-items: center; }
+    .end-copy { display: grid; gap: 20px; }
+    .end-list { display: grid; gap: 12px; }
+    .end-list div { display: flex; gap: 11px; align-items: center; color: rgba(255,255,255,.72); font-size: 14px; }
+    .end-list i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px rgba(185,243,90,.7); }
+    .end-quote { position: relative; padding: 28px; border: 1px solid rgba(185,243,90,.25); border-radius: 24px; background: rgba(255,255,255,.055); }
+    .end-quote::before { content: "“"; position: absolute; top: -17px; left: 20px; color: var(--green); font-size: 70px; line-height: 1; }
+    .end-quote p { color: var(--white); font-size: clamp(24px, 3.2vw, 48px); line-height: 1.08; letter-spacing: -.07em; font-weight: 800; }
+    .end-quote small { display: block; margin-top: 18px; color: rgba(255,255,255,.5); font-size: 11px; }
+
+    /* Controls */
+    .controls { position: fixed; z-index: 20; left: 50%; bottom: 17px; display: flex; align-items: center; gap: 10px; width: min(92vw, 660px); padding: 8px 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 99px; background: rgba(16,33,28,.86); box-shadow: 0 12px 30px rgba(0,0,0,.18); transform: translateX(-50%); backdrop-filter: blur(12px); }
+    .controls button { display: grid; place-items: center; width: 34px; height: 30px; padding: 0; border: 0; border-radius: 99px; background: transparent; color: rgba(255,255,255,.74); cursor: pointer; transition: .2s ease; }
+    .controls button:hover { background: rgba(185,243,90,.16); color: var(--green); }
+    .controls .progress { flex: 1; height: 4px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.14); }
+    .controls .progress span { display: block; width: 8.3%; height: 100%; border-radius: inherit; background: var(--green); transition: width .35s ease; }
+    .counter { min-width: 52px; color: rgba(255,255,255,.68); font: 700 11px "SFMono-Regular", Consolas, monospace; text-align: center; }
+    .help { position: fixed; z-index: 18; right: 18px; bottom: 18px; padding: 7px 11px; border-radius: 99px; color: rgba(255,255,255,.46); font-size: 10px; pointer-events: none; }
+    .toast { position: fixed; z-index: 30; left: 50%; top: 18px; padding: 9px 13px; border-radius: 99px; background: var(--green); color: var(--dark); font-size: 11px; font-weight: 800; opacity: 0; transform: translate(-50%, -10px); transition: .25s ease; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* Overview mode */
+    body.overview { overflow: auto; background: #09130f; }
+    body.overview .deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; height: auto; padding: 22px; }
+    body.overview .slide, body.overview .slide.active { position: relative; inset: auto; display: grid; width: auto; height: auto; aspect-ratio: 16 / 9; padding: 22px; border-radius: 16px; animation: none; cursor: pointer; }
+    body.overview .slide:not(.active) { opacity: .75; }
+    body.overview .controls { position: fixed; bottom: 15px; }
+
+    @media (max-width: 850px) {
+      .slide { padding: 25px 25px 65px; gap: 18px; overflow: auto; }
+      .slide-head { display: grid; gap: 12px; align-items: start; }
+      .slide-head .lede { max-width: none; }
+      .cover-grid, .split, .model-grid, .media-grid, .sensor-layout, .light-layout, .end-content { grid-template-columns: 1fr; }
+      .ei-layout, .feature-layout, .service-layout, .phone-layout { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .pipeline, .rules-grid { grid-template-columns: 1fr 1fr; }
+      .ei-flow { grid-template-columns: repeat(5, minmax(130px, 1fr)); overflow-x: auto; padding-bottom: 7px; }
+      .ei-step { min-height: 165px; }
+      .pipeline-card::after { display: none; }
+      .sense-map { grid-template-columns: 1fr; }
+      .sense-center { min-height: 170px; }
+      .sense-center::before, .sense-center::after { display: none; }
+      .sense-bottom { grid-template-columns: 1fr 1fr; }
+      .media-main { min-height: 280px; }
+      .phone-shell { height: min(54vh, 390px); width: auto; }
+      .runway { grid-template-columns: 1fr 1fr 1fr; gap: 18px 7px; }
+      .runway::before { display: none; }
+      .command-band { grid-template-columns: 1fr; }
+      .end-content { gap: 25px; }
+    }
+    @media (max-width: 520px) {
+      .pipeline, .rules-grid, .metrics, .light-stats, .sense-bottom, .pitfall-strip, .feature-grid, .service-grid, .ei-specs { grid-template-columns: 1fr; }
+      .ei-flow { grid-template-columns: 1fr; overflow: visible; }
+      .ei-step { min-height: auto; }
+      .dataset-steps { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 58px 1fr 46px; gap: 7px; }
+      .runway { grid-template-columns: 1fr 1fr; }
+      .cover-footer { display: grid; gap: 9px; }
+      h1 { font-size: 46px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck">
+    <section class="slide dark cover active" data-title="표지">
+      <div class="cover-grid">
+        <div class="cover-copy">
+          <span class="eyebrow">AI COMPUTING · FIELD NOTES</span>
+          <h1>빛·화면·<br><em>데이터</em>로 배우는<br>TinyML</h1>
+          <span class="accent-line"></span>
+          <p class="lede">XIAO ESP32-S3 Sense로 카메라와 I²C 센서를 연결하고, 브라우저에서 수집한 데이터를 현장 추론으로 이어 본 오늘의 기록.</p>
+          <div class="cover-meta">
+            <span class="tag"><b>CAMERA</b> battery / fan</span>
+            <span class="tag"><b>SENSOR</b> BH1750 / BME280 / BNO055</span>
+            <span class="tag"><b>MODE</b> standalone AP</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="XIAO ESP32-S3 Sense 추상 그래픽">
+          <div class="orbit orbit-a"></div>
+          <div class="orbit orbit-b"></div>
+          <div class="board-card">
+            <div class="camera-dot"><span></span></div>
+            <div class="board-label">XIAO<br>ESP32-S3<br><small>SENSE</small></div>
+            <div class="pin-row"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="cover-footer">
+        <span class="source">camera_dataset · sensorTest · Webppt</span>
+        <span class="source">2026.08.04 / learning archive</span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="오늘의 질문">
+      <div class="slide-head">
+        <div><span class="eyebrow">01 / QUESTION</span><h2>센서와 카메라가<br><em>모델의 언어</em>가 되기까지</h2></div>
+        <p class="lede">오늘의 실습은 부품을 연결하는 데서 끝나지 않는다. 원시 신호를 라벨이 있는 데이터로 바꾸고, 다시 현장에서 쓸 수 있는 판단으로 돌려보내는 과정이다.</p>
+      </div>
+      <div class="pipeline">
+        <article class="pipeline-card">
+          <div class="pipeline-icon"><span>◉</span><span class="number">01</span></div>
+          <div><h3>수집<br>COLLECT</h3><p>카메라 프레임과 1초 단위 조도 값을 브라우저에서 모은다.</p></div>
+          <span class="pill">raw signal → label</span>
+        </article>
+        <article class="pipeline-card">
+          <div class="pipeline-icon"><span>✦</span><span class="number">02</span></div>
+          <div><h3>학습<br>TRAIN</h3><p>이미지 크기, 샘플 수, 라벨 균형이 모델이 보는 세계를 만든다.</p></div>
+          <span class="pill orange">dataset → model</span>
+        </article>
+        <article class="pipeline-card">
+          <div class="pipeline-icon"><span>⌁</span><span class="number">03</span></div>
+          <div><h3>추론<br>INFER</h3><p>보드 위에서 새 입력을 읽고, confidence와 함께 판단한다.</p></div>
+          <span class="pill blue">model → action</span>
+        </article>
+      </div>
+      <div class="question-band"><strong>하드웨어 → 브라우저 → 데이터셋 → 모델 → 현장</strong><span>오늘 배운 흐름을 한 줄로 압축하면</span></div>
+      <div class="source">source: C:\arduinoTest\camera_dataset · C:\arduinoTest\sensorTest</div>
+    </section>
+
+    <section class="slide" data-title="하나의 보드, 두 가지 감각">
+      <div class="slide-head">
+        <div><span class="eyebrow">02 / PLATFORM</span><h2>하나의 보드,<br><em>두 가지 감각</em></h2></div>
+        <p class="lede">카메라는 장면을 보고, I²C 센서는 환경을 읽는다. 둘 다 같은 보드에서 네트워크와 데이터 파이프라인을 만난다.</p>
+      </div>
+      <div class="sense-map">
+        <div class="sense-column">
+          <article class="sense-card"><div class="sensor-symbol">◉</div><div><h3>Camera</h3><p>배터리 / 선풍기<br>96 × 96 image classification</p></div></article>
+          <article class="sense-card"><div class="sensor-symbol">⌁</div><div><h3>AP web UI</h3><p><span class="mono">bkh</span> · <span class="mono">192.168.4.1</span><br>수집과 ZIP 다운로드</p></div></article>
+        </div>
+        <div class="sense-center">
+          <span class="connection-label">XIAO ESP32-S3 Sense</span>
+          <div class="mini-board"><div class="camera-dot"><span></span></div><div><b>XIAO</b><br><small>ESP32-S3 · SENSE</small></div></div>
+        </div>
+        <div class="sense-column">
+          <article class="sense-card"><div class="sensor-symbol">☼</div><div><h3>I²C sensor</h3><p>BH1750 조도 · BME280 기압/습도<br>BNO055 방향/자세</p></div></article>
+          <article class="sense-card"><div class="sensor-symbol">↗</div><div><h3>Edge Impulse</h3><p>이미지 / 시계열 데이터<br>학습 → Arduino library</p></div></article>
+        </div>
+      </div>
+      <div class="sense-bottom">
+        <div class="stat-chip"><b>AP mode</b><span>공유기 없이 보드가 직접 핫스팟이 된다.</span></div>
+        <div class="stat-chip"><b>PSRAM</b><span>카메라·모델 버퍼에 필요한 여유 공간.</span></div>
+        <div class="stat-chip"><b>115200</b><span>시리얼로 상태를 확인하는 기준 속도.</span></div>
+      </div>
+      <div class="source">source: xiao_webcam_ap_collect · sensorTest · Edge Impulse training report</div>
+    </section>
+
+    <section class="slide" data-title="Edge Impulse의 이해">
+      <div class="slide-head">
+        <div><span class="eyebrow">03 / EDGE IMPULSE</span><h2>Edge Impulse를<br><em>데이터 파이프라인</em>으로</h2></div>
+        <p class="lede">Edge Impulse는 버튼 한 번으로 결과를 만드는 마법이 아니라, 데이터를 모델로 바꾸고 다시 디바이스에 넣는 작업 공간이다.</p>
+      </div>
+      <div class="ei-layout">
+        <div class="ei-flow">
+          <article class="ei-step"><span class="step-no">01 · DATA</span><div><h3>수집</h3><p>이미지·CSV를 라벨과 함께 업로드한다.</p></div></article>
+          <article class="ei-step"><span class="step-no">02 · IMPULSE</span><div><h3>설계</h3><p>입력 크기와 DSP·학습 블록을 정한다.</p></div></article>
+          <article class="ei-step"><span class="step-no">03 · FEATURES</span><div><h3>특징 추출</h3><p>모델이 볼 수 있는 숫자 표현으로 바꾼다.</p></div></article>
+          <article class="ei-step"><span class="step-no">04 · TRAIN</span><div><h3>학습·평가</h3><p>validation과 test 결과를 분리해 확인한다.</p></div></article>
+          <article class="ei-step"><span class="step-no">05 · DEPLOY</span><div><h3>배포</h3><p>Arduino library로 보드 안에 넣는다.</p></div></article>
+        </div>
+        <aside class="ei-note">
+          <h3>이번 실습의 impulse</h3>
+          <p>카메라 이미지는 전이학습으로, 조도 값은 시계열 데이터로 다룬다. 같은 서비스 안에서도 입력의 모양에 따라 설계가 달라진다.</p>
+          <div class="ei-specs"><div class="ei-spec"><b>96×96</b><span>image input</span></div><div class="ei-spec"><b>20 cycles</b><span>training</span></div><div class="ei-spec"><b>0.0005</b><span>learning rate</span></div><div class="ei-spec"><b>Arduino</b><span>deployment target</span></div></div>
+        </aside>
+      </div>
+      <div class="source">Edge Impulse: data acquisition → impulse design → generate features → train → test → deploy</div>
+    </section>
+
+    <section class="slide" data-title="ESP32-S3의 특징">
+      <div class="slide-head">
+        <div><span class="eyebrow">04 / ESP32-S3</span><h2>ESP32-S3는<br><em>작은 현장 컴퓨터</em></h2></div>
+        <p class="lede">센서와 카메라를 읽고, 네트워크를 만들고, 추론까지 수행한다. 그래서 실습 보드가 곧 서비스의 실행 장치가 된다.</p>
+      </div>
+      <div class="feature-layout">
+        <div class="feature-grid">
+          <article class="feature-card"><div class="feature-icon">⌁</div><div><h3>Wi-Fi AP / STA</h3><p>공유기 없이 핫스팟이 되거나 기존 공유기에 접속한다.</p></div></article>
+          <article class="feature-card"><div class="feature-icon">⌁</div><div><h3>BLE</h3><p>근거리 무선 장치와 데이터를 주고받는다.</p></div></article>
+          <article class="feature-card"><div class="feature-icon">◉</div><div><h3>Camera + PSRAM</h3><p>Sense 보드의 카메라와 큰 버퍼를 활용한다.</p></div></article>
+          <article class="feature-card"><div class="feature-icon">⌇</div><div><h3>GPIO / I²C</h3><p>D4·D5 버스로 여러 센서를 연결한다.</p></div></article>
+          <article class="feature-card"><div class="feature-icon">▣</div><div><h3>USB Serial</h3><p>115200 baud로 부팅과 센서 상태를 확인한다.</p></div></article>
+          <article class="feature-card"><div class="feature-icon">✦</div><div><h3>TinyML on-device</h3><p>클라우드가 없어도 보드에서 분류를 실행한다.</p></div></article>
+        </div>
+        <aside class="spec-ribbon"><span class="pill">XIAO ESP32-S3 Sense</span><h3>읽고 · 연결하고 · 판단한다</h3><p>작은 보드 위에 입력, 통신, 추론이 한 번에 들어간다. 오늘의 핵심은 이 세 가지를 하나의 흐름으로 묶는 것.</p><div class="spec-list"><span>Wi-Fi 4 · BLE 5</span><span>camera interface · PSRAM</span><span>USB CDC · Arduino workflow</span></div></aside>
+      </div>
+      <div class="source">source: xiao-esp32s3 skill · xiao-webcam-ap · xiao-i2c-sensors</div>
+    </section>
+
+    <section class="slide" data-title="서비스 특징">
+      <div class="slide-head">
+        <div><span class="eyebrow">05 / SERVICE</span><h2>서비스 특징은<br><em>설치보다 연결</em></h2></div>
+        <p class="lede">보드가 웹 서버가 되면 앱을 따로 설치하지 않아도 된다. 휴대폰 브라우저가 수집기·모니터·다운로더가 된다.</p>
+      </div>
+      <div class="service-layout">
+        <div class="service-hero"><div class="wifi-mark">◔</div><b>bkh</b><code>http://192.168.4.1</code><small>STANDALONE ACCESS POINT · LOCAL SERVICE</small></div>
+        <div class="service-grid">
+          <article class="service-card"><span class="service-tag">01 · NO APP</span><div><b>브라우저 바로 연결</b><p>휴대폰을 AP에 연결하고 주소 한 줄을 연다.</p></div></article>
+          <article class="service-card"><span class="service-tag">02 · LOCAL</span><div><b>인터넷 없이 동작</b><p>보드와 휴대폰이 같은 로컬 네트워크에서 통신한다.</p></div></article>
+          <article class="service-card"><span class="service-tag">03 · LIVE</span><div><b>실시간 화면</b><p>카메라 프레임, 라벨, confidence를 바로 확인한다.</p></div></article>
+          <article class="service-card"><span class="service-tag">04 · EXPORT</span><div><b>데이터 ZIP</b><p>갤러리의 사진·CSV를 Edge Impulse용 파일로 내보낸다.</p></div></article>
+        </div>
+      </div>
+      <div class="question-band"><strong>휴대폰 = 화면 + 조작기</strong><span>촬영은 XIAO Sense 카메라, 휴대폰은 웹 서비스를 보는 장치</span></div>
+      <div class="source">AP mode · SSID bkh · password 11112222 · browser endpoint 192.168.4.1</div>
+    </section>
+
+    <section class="slide" data-title="카메라 데이터셋">
+      <div class="slide-head">
+        <div><span class="eyebrow">06 / CAMERA DATASET</span><h2>물체보다 먼저,<br><em>라벨을 설계한다</em></h2></div>
+        <p class="lede">카메라 모델의 첫 번째 성능은 모델 구조가 아니라 데이터가 어떤 장면을 대표하는지에서 결정된다.</p>
+      </div>
+      <div class="split">
+        <div class="capture-frame"><img src="tlftmq1.png" alt="배터리로 분류된 실시간 추론 화면" loading="lazy"></div>
+        <div class="dataset-copy">
+          <div class="metrics">
+            <div class="metric"><b>304</b><span>전체 이미지<br>camera_dataset</span></div>
+            <div class="metric"><b>154</b><span>battery<br>label</span></div>
+            <div class="metric"><b>150</b><span>fan<br>label</span></div>
+          </div>
+          <div class="dataset-steps">
+            <div class="dataset-step"><b>01 · 장면</b><span>AP 수집기에서 같은 물체를 여러 각도로 촬영</span></div>
+            <div class="dataset-step"><b>02 · 라벨</b><span>battery / fan을 분리해 균형에 가깝게 구성</span></div>
+            <div class="dataset-step"><b>03 · ZIP</b><span>브라우저 갤러리에서 Edge Impulse로 이동</span></div>
+          </div>
+          <div class="panel" style="padding:18px 20px;display:flex;justify-content:space-between;gap:18px;align-items:center"><span class="pill">79% train</span><span class="pill orange">21% test</span><span class="micro">241 train / 63 test</span></div>
+        </div>
+      </div>
+      <div class="source">source: C:\arduinoTest\camera_dataset\training_report.json · Webppt\tlftmq1.png</div>
+    </section>
+
+    <section class="slide" data-title="모델 성능">
+      <div class="slide-head">
+        <div><span class="eyebrow">07 / MODEL CHECK</span><h2>모델은 숫자로도<br><em>겸손해야 한다</em></h2></div>
+        <p class="lede">검증 정확도 100%는 인상적이지만, 실제 배포 포맷으로 바뀐 순간의 성능까지 확인해야 한다.</p>
+      </div>
+      <div class="model-grid">
+        <div class="accuracy-card">
+          <h3>63-sample model testing</h3>
+          <div class="bar-list">
+            <div class="bar-row"><label>float32</label><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><b>100%</b></div>
+            <div class="bar-row"><label>int8</label><div class="bar-track"><div class="bar-fill orange" style="width:79.4%"></div></div><b>79.4%</b></div>
+            <div class="bar-row"><label>val acc</label><div class="bar-track"><div class="bar-fill blue" style="width:100%"></div></div><b>100%</b></div>
+          </div>
+          <div class="bar-caption"><span>float32: 63 good / 0 bad</span><span>int8: 50 good / 13 bad</span></div>
+        </div>
+        <div class="model-note">
+          <div class="warning-card"><strong>배포 전 질문</strong><p>양자화된 int8 모델은 새 카메라 이미지에서도 충분히 안정적인가? 리포트도 “새 이미지로 평가한 뒤 신뢰하라”고 말한다.</p></div>
+          <div class="confusion">
+            <div class="cell"><b>36/36</b><span>fan → fan<br>int8 test</span></div>
+            <div class="cell"><b>14/27</b><span>battery → battery<br>int8 test</span></div>
+            <div class="cell"><b>6</b><span>battery가<br>uncertain</span></div>
+            <div class="cell"><b>0.85</b><span>int8 ROC AUC<br>rounded</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="source">source: training_report.json · image 96×96 · transfer learning · 20 cycles · lr 0.0005</div>
+    </section>
+
+    <section class="slide" data-title="현장 추론">
+      <div class="slide-head">
+        <div><span class="eyebrow">08 / PHONE LIVE</span><h2>휴대폰으로 연결한<br><em>실시간 라이브</em></h2></div>
+        <p class="lede">휴대폰 브라우저로 보드에 접속하면, XIAO Sense 카메라의 장면과 AI 판단을 실시간으로 확인할 수 있다.</p>
+      </div>
+      <div class="phone-layout">
+        <div class="phone-shell" aria-label="휴대폰 안의 실시간 추론 화면"><div class="phone-screen"><img src="tlftmq1.png" alt="휴대폰으로 확인하는 battery 84%, fan 16% 추론 화면"></div></div>
+        <div class="live-copy">
+          <h3>휴대폰은 화면,<br>보드는 카메라와 AI</h3>
+          <p class="lede">AP에 연결한 뒤 <span class="mono">http://192.168.4.1</span>을 열면 별도 앱 없이 서비스 화면이 나타난다.</p>
+          <div class="live-steps"><div class="live-step"><i>01</i><span><b>휴대폰 Wi-Fi</b>에서 <span class="mono">bkh</span> 선택</span></div><div class="live-step"><i>02</i><span>브라우저에서 <b>192.168.4.1</b> 접속</span></div><div class="live-step"><i>03</i><span>보드 카메라의 프레임과 <b>confidence</b> 확인</span></div></div>
+          <div class="video-card" style="min-height:145px;grid-template-rows:auto 1fr"><h3>실습 화면 · local video</h3><video src="ai%20컴퓨팅프로젝트%20실습.mp4" poster="tlftmq1.png" controls preload="metadata"></video></div>
+        </div>
+      </div>
+      <div class="source">source: Webppt\tlftmq1.png · Webppt\ai 컴퓨팅프로젝트 실습.mp4 · 휴대폰은 모니터, 촬영은 XIAO Sense</div>
+    </section>
+
+    <section class="slide" data-title="I²C 센서 버스">
+      <div class="slide-head">
+        <div><span class="eyebrow">09 / SENSOR BUS</span><h2>I²C 버스에는<br><em>규칙이 있다</em></h2></div>
+        <p class="lede">센서가 많아질수록 먼저 확인할 것은 드라이버가 아니라 배선, 핀, 주소다. 한 번의 스캔이 다음 디버깅을 줄인다.</p>
+      </div>
+      <div class="sensor-layout">
+        <div class="bus-board">
+          <div class="xiao-block"><div class="camera-dot"><span></span></div><div><b>XIAO ESP32-S3</b><br><small>SDA / SCL HOST</small></div></div>
+          <div class="bus-lines"><div class="bus-line"><span>SDA · GPIO5</span></div><div class="bus-line"><span>SCL · GPIO6</span></div></div>
+        </div>
+        <div>
+          <div class="sensor-stack">
+            <div class="sensor-row"><b>BH1750</b><span>ambient light · lux</span><code>0x23</code></div>
+            <div class="sensor-row"><b>BME280</b><span>temperature · pressure · humidity</span><code>0x76</code></div>
+            <div class="sensor-row"><b>BNO055</b><span>heading · roll · pitch · calibration</span><code>0x29</code></div>
+          </div>
+          <p class="sensor-caption">공통 기준: <span class="mono">Wire.begin(D4, D5)</span> · 3V3 · GND. 주소가 겹치지 않는 한 같은 버스에 센서를 함께 연결할 수 있다.</p>
+        </div>
+      </div>
+      <div class="source">source: C:\arduinoTest\sensorTest\README.md · xiao-i2c-sensors skill reference</div>
+    </section>
+
+    <section class="slide" data-title="조도 데이터셋">
+      <div class="slide-head">
+        <div><span class="eyebrow">10 / TIME SERIES</span><h2>빛을<br><em>데이터셋</em>으로 바꾸기</h2></div>
+        <p class="lede">BH1750은 1초마다 읽은 값을 30개씩 묶어 하나의 시계열 샘플로 만든다. 브라우저가 수집 도구이자 ZIP 생성기다.</p>
+      </div>
+      <div class="light-layout">
+        <div class="logger-shot"><img src="조도수집기.png" alt="BH1750 조도 수집기 화면" loading="lazy"></div>
+        <div class="light-copy">
+          <div class="light-stats">
+            <div class="metric"><b>20</b><span>CSV samples</span></div>
+            <div class="metric"><b>600</b><span>total values</span></div>
+            <div class="metric"><b>1 Hz</b><span>sample rate</span></div>
+            <div class="metric"><b>0–787.5</b><span>observed lux</span></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head"><b>indoor.0001.csv · 30 sec</b><span>mean 658.6 lux</span></div>
+            <svg id="luxChart" viewBox="0 0 640 160" role="img" aria-label="30초 동안 측정한 조도 시계열"><line class="grid-line" x1="0" y1="26" x2="640" y2="26"></line><line class="grid-line" x1="0" y1="80" x2="640" y2="80"></line><line class="grid-line" x1="0" y1="134" x2="640" y2="134"></line><polyline class="area" data-area points="0,160 0,160 640,160"></polyline><polyline class="line" data-line points="0,100 640,100"></polyline><circle class="dot" data-dot cx="0" cy="100" r="5"></circle></svg>
+            <div class="chart-axis"><span>0 sec</span><span>15 sec</span><span>30 sec</span></div>
+          </div>
+          <div class="panel" style="padding:15px 18px;display:flex;gap:12px;align-items:center"><span class="pill">indoor</span><span class="micro">현재 폴더에는 indoor 라벨 20개가 저장되어 있다. 모델을 만들려면 다른 환경·라벨도 추가한다.</span></div>
+        </div>
+      </div>
+      <div class="source">source: C:\arduinoTest\sensorTest\bh1750_dataset\bh1750_data · README.txt · indoor.0001.csv</div>
+    </section>
+
+    <section class="slide" data-title="센서 품질 체크">
+      <div class="slide-head">
+        <div><span class="eyebrow">11 / DEBUGGING</span><h2>센서에도 학습 전<br><em>품질 체크</em>가 있다</h2></div>
+        <p class="lede">숫자가 출력된다고 센서가 제대로 읽힌 것은 아니다. 주소·칩 ID·변환 대기 시간까지 확인해야 데이터가 의미를 갖는다.</p>
+      </div>
+      <div class="rules-grid">
+        <article class="rule-card"><div class="rule-no">01</div><div><h3>Scan first</h3><p>전체 I²C 주소를 스캔하고 실제 응답 주소를 기록한다. 후보 이름만 믿지 않는다.</p></div><span class="pill">bus → fact</span></article>
+        <article class="rule-card"><div class="rule-no">02</div><div><h3>Read identity</h3><p><span class="mono">0x76</span>이면 CHIP_ID를 읽는다. <span class="mono">0x60</span>은 BME280, <span class="mono">0x58</span>은 BMP280이다.</p></div><span class="pill blue">ID → driver</span></article>
+        <article class="rule-card"><div class="rule-no">03</div><div><h3>Wait & convert</h3><p>BH1750은 시작 뒤 약 120–200ms를 기다린다. 첫 0 lux를 배선 고장으로 단정하지 않는다.</p></div><span class="pill orange">time → value</span></article>
+        <article class="rule-card"><div class="rule-no">04</div><div><h3>Keep checks honest</h3><p>사람이 손으로 가려야 하는 변화는 자동 점수가 아니라 manual check로 남긴다.</p></div><span class="pill">test → trust</span></article>
+      </div>
+      <div class="pitfall-strip">
+        <div class="pitfall"><b>BNO055가 0.00이면?</b><span>주소가 <span class="mono">0x29</span>인지, 존재하지 않는 외부 크리스털을 선택하지 않았는지 확인한다.</span></div>
+        <div class="pitfall"><b>한 센서가 없으면?</b><span>다른 센서까지 조용해지지 않도록 각 장치를 독립적으로 probe하고, 없는 장치만 건너뛴다.</span></div>
+      </div>
+      <div class="source">source: xiao-i2c-sensors verified workflow · sensorTest examples</div>
+    </section>
+
+    <section class="slide" data-title="데이터의 모양">
+      <div class="slide-head">
+        <div><span class="eyebrow">12 / TAKEAWAY</span><h2>데이터의 모양이<br><em>성능의 모양</em>을 만든다</h2></div>
+        <p class="lede">이미지와 시계열은 서로 다른 모양의 문제지만, 좋은 데이터 파이프라인에 필요한 질문은 같다.</p>
+      </div>
+      <div class="lesson-grid">
+        <div class="shape-card">
+          <h3>실습에서 보인 두 개의 모양</h3>
+          <div class="data-bars">
+            <div class="data-bar"><label>IMAGE</label><i style="width:100%"></i><b>96×96</b></div>
+            <div class="data-bar"><label>TIME SERIES</label><i></i><b>30 pt</b></div>
+            <div class="data-bar"><label>DEPLOY</label><i></i><b>int8</b></div>
+          </div>
+          <p class="micro">같은 “분류”라도 입력의 구조와 배포 포맷이 바뀌면 다시 검증해야 한다.</p>
+        </div>
+        <div class="takeaways">
+          <div class="takeaway"><div class="mark">01</div><div><strong>균형</strong><span>battery 154 / fan 150처럼 클래스 수와 장면을 고르게 만든다.</span></div></div>
+          <div class="takeaway"><div class="mark">02</div><div><strong>다양성</strong><span>빛·각도·거리·환경이 달라져도 라벨의 의미가 유지되는지 확인한다.</span></div></div>
+          <div class="takeaway"><div class="mark">03</div><div><strong>현장성</strong><span>float32가 아니라 실제 보드에서 쓰는 int8과 새 입력으로 판단한다.</span></div></div>
+        </div>
+      </div>
+      <div class="source">today's note: 높은 validation accuracy와 현장 성능은 같은 말이 아니다.</div>
+    </section>
+
+    <section class="slide" data-title="재현 가능한 실행 순서">
+      <div class="slide-head">
+        <div><span class="eyebrow">13 / REPEAT</span><h2>다음 실습도<br><em>같은 흐름으로</em></h2></div>
+        <p class="lede">부품과 모델이 바뀌어도 순서는 크게 달라지지 않는다. 기록이 남는 순서로 반복하면 디버깅이 빨라진다.</p>
+      </div>
+      <div class="runway">
+        <article class="run-step"><div class="circle">⌁</div><h3>배선</h3><p>3V3 / GND<br>D4 SDA · D5 SCL</p></article>
+        <article class="run-step"><div class="circle">◎</div><h3>스캔</h3><p>주소와 CHIP_ID<br>시리얼 확인</p></article>
+        <article class="run-step"><div class="circle">▣</div><h3>수집</h3><p>AP에서 라벨 입력<br>CSV / ZIP 생성</p></article>
+        <article class="run-step"><div class="circle">✦</div><h3>학습</h3><p>샘플 균형<br>배포 포맷 평가</p></article>
+        <article class="run-step"><div class="circle">↗</div><h3>현장 테스트</h3><p>새 입력과 latency<br>다시 확인</p></article>
+      </div>
+      <div class="command-band">
+        <div class="command"><span>CAMERA AP</span><code>Wi-Fi: bkh  →  http://192.168.4.1</code></div>
+        <div class="command"><span>I²C BASELINE</span><code>Wire.begin(D4, D5)  →  scan  →  read</code></div>
+      </div>
+      <div class="source">reproducibility checklist · AP collector · sensorTest · Edge Impulse</div>
+    </section>
+
+    <section class="slide dark end" data-title="마무리">
+      <div class="end-content">
+        <div class="end-copy">
+          <span class="eyebrow">14 / CLOSING NOTE</span>
+          <h2>좋은 모델은<br><em>좋은 데이터 파이프라인</em>의 끝에서 나온다</h2>
+          <p class="lede">오늘은 보드가 보고, 듣고, 읽은 신호를 학습 가능한 형태로 바꾸는 연습을 했다. 다음 질문은 이제 우리 차례다.</p>
+          <div class="end-list"><div><i></i>어떤 환경을 더 수집해야 할까?</div><div><i></i>int8 모델을 현장에서 어떻게 검증할까?</div><div><i></i>센서 시계열에는 어떤 라벨이 필요할까?</div></div>
+        </div>
+        <div class="end-quote"><p>수집한 한 줄의 데이터가<br>현장의 한 번의 판단이 된다.</p><small>XIAO ESP32-S3 Sense · learning archive</small></div>
+      </div>
+      <div class="cover-footer"><span class="source">camera_dataset · sensorTest · Webppt</span><span class="source">끝 / 질문과 실험</span></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div class="help">← → / Space · O overview · F fullscreen · ? help</div>
+  <nav class="controls" aria-label="슬라이드 컨트롤">
+    <button id="prev" type="button" aria-label="이전 슬라이드">←</button>
+    <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+    <span class="counter" id="counter">01 / 15</span>
+    <button id="next" type="button" aria-label="다음 슬라이드">→</button>
+    <button id="helpButton" type="button" aria-label="단축키 안내">?</button>
+  </nav>
+
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll('.slide')];
+      const deck = document.getElementById('deck');
+      const counter = document.getElementById('counter');
+      const progressBar = document.getElementById('progressBar');
+      const toast = document.getElementById('toast');
+      let current = 0;
+      let toastTimer;
+
+      const showToast = (message) => {
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 1900);
+      };
+
+      const update = (writeHash = true) => {
+        slides.forEach((slide, i) => {
+          const active = i === current;
+          slide.classList.toggle('active', active);
+          slide.setAttribute('aria-hidden', String(!active));
+        });
+        const number = String(current + 1).padStart(2, '0');
+        counter.textContent = `${number} / ${String(slides.length).padStart(2, '0')}`;
+        progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+        document.title = `${slides[current].dataset.title} · 빛·화면·데이터로 배우는 TinyML`;
+        if (writeHash) history.replaceState(null, '', `#${current + 1}`);
+      };
+
+      const go = (index) => {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        if (document.body.classList.contains('overview')) document.body.classList.remove('overview');
+        update();
+      };
+
+      document.getElementById('prev').addEventListener('click', () => go(current - 1));
+      document.getElementById('next').addEventListener('click', () => go(current + 1));
+      document.getElementById('helpButton').addEventListener('click', () => showToast('← → 이동 · Space 다음 · O 개요 · F 전체화면'));
+
+      document.addEventListener('keydown', (event) => {
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (['input', 'textarea', 'select'].includes(tag)) return;
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') { event.preventDefault(); go(current + 1); }
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); go(current - 1); }
+        if (event.key === 'Home') { event.preventDefault(); go(0); }
+        if (event.key === 'End') { event.preventDefault(); go(slides.length - 1); }
+        if (event.key.toLowerCase() === 'o') { document.body.classList.toggle('overview'); showToast(document.body.classList.contains('overview') ? '슬라이드 개요' : '발표 화면'); }
+        if (event.key.toLowerCase() === 'f') { document.documentElement.requestFullscreen?.(); }
+        if (event.key === '?') showToast('← → / Space 이동 · O 개요 · F 전체화면');
+        if (event.key === 'Escape' && document.body.classList.contains('overview')) document.body.classList.remove('overview');
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!document.body.classList.contains('overview')) return;
+        const slide = event.target.closest('.slide');
+        if (!slide) return;
+        go(slides.indexOf(slide));
+      });
+
+      let touchStartX = 0;
+      deck.addEventListener('touchstart', (event) => { touchStartX = event.changedTouches[0].screenX; }, { passive: true });
+      deck.addEventListener('touchend', (event) => {
+        const delta = event.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(delta) > 45) go(current + (delta < 0 ? 1 : -1));
+      }, { passive: true });
+
+      const luxSeries = [602.5,614.167,578.333,590,583.333,586.667,583.333,697.5,696.667,695.833,665,645.833,643.333,673.333,653.333,615.833,680.833,699.167,695,702.5,690.833,685.833,685.833,685.833,685.833,685.833,685,684.167,682.5,683.333];
+      const chart = document.getElementById('luxChart');
+      if (chart) {
+        const width = 640, height = 160, pad = 8;
+        const min = Math.min(...luxSeries), max = Math.max(...luxSeries);
+        const points = luxSeries.map((value, i) => {
+          const x = pad + (i / (luxSeries.length - 1)) * (width - pad * 2);
+          const y = height - pad - ((value - min) / (max - min)) * (height - pad * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        chart.querySelector('[data-line]').setAttribute('points', points);
+        chart.querySelector('[data-area]').setAttribute('points', `${pad},${height - pad} ${points} ${width - pad},${height - pad}`);
+        const last = points.split(' ').at(-1).split(',');
+        chart.querySelector('[data-dot]').setAttribute('cx', last[0]);
+        chart.querySelector('[data-dot]').setAttribute('cy', last[1]);
+      }
+
+      const hash = Number.parseInt(location.hash.slice(1), 10);
+      if (Number.isInteger(hash) && hash >= 1 && hash <= slides.length) current = hash - 1;
+      update(false);
+    })();
+  </script>
+</body>
+</html>
