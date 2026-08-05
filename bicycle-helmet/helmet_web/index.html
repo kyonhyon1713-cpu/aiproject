@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Interactive bicycle helmet GLB viewer">
+  <title>Helmet / 3D Viewer</title>
+
+  <!-- Google Hosted Libraries: model-viewer 공식 CDN -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="viewer-stage">
+    <model-viewer
+      id="helmet-viewer"
+      src="helmet.glb"
+      alt="3D bicycle helmet"
+      camera-controls
+      auto-rotate
+      auto-rotate-delay="0"
+      rotation-per-second="18deg"
+      camera-target="auto auto auto"
+      camera-orbit="0deg 75deg auto"
+      field-of-view="32deg"
+      exposure="1.05"
+      shadow-intensity="0.65"
+      shadow-softness="0.85"
+      environment-image="neutral"
+      interaction-prompt="auto"
+      touch-action="pan-y"
+      loading="eager"
+      reveal="auto">
+      <div slot="progress-bar" class="model-progress" aria-hidden="true">
+        <span class="model-progress__value"></span>
+      </div>
+    </model-viewer>
+
+    <header class="topbar">
+      <div class="identity">
+        <span class="identity__eyebrow">CAD STUDY / 01</span>
+        <h1>Helmet<span>_3D</span></h1>
+        <p>Interactive GLB inspection</p>
+      </div>
+      <div class="load-state" id="load-state" aria-live="polite">
+        <span class="load-state__dot" aria-hidden="true"></span>
+        <span id="load-state-label">Loading model</span>
+      </div>
+    </header>
+
+    <aside class="orientation-mark" aria-hidden="true">
+      <span class="orientation-mark__line orientation-mark__line--x"></span>
+      <span class="orientation-mark__line orientation-mark__line--y"></span>
+      <span class="orientation-mark__line orientation-mark__line--z"></span>
+      <span class="orientation-mark__label">Y / UP</span>
+    </aside>
+
+    <section class="control-dock" aria-label="3D model controls">
+      <div class="control-dock__copy">
+        <span class="control-dock__eyebrow">VIEW CONTROLS</span>
+        <strong>Drag to orbit · wheel to zoom</strong>
+      </div>
+      <div class="control-dock__actions">
+        <button class="control-button" id="reset-view" type="button">Reset view</button>
+        <button class="control-button control-button--accent" id="toggle-rotate" type="button" aria-pressed="true">Auto-rotate on</button>
+      </div>
+    </section>
+
+    <div class="error-toast" id="error-toast" role="alert" hidden>
+      <strong>Model could not load.</strong>
+      <span>Live Server 또는 GitHub Pages에서 실행하고 helmet.glb 경로를 확인하세요.</span>
+    </div>
+  </main>
+
+  <noscript>이 뷰어는 JavaScript가 필요합니다.</noscript>
+  <script src="script.js" defer></script>
+</body>
+</html>

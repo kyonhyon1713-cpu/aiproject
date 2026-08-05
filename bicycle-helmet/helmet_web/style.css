@@ -1,0 +1,261 @@
+:root {
+  color-scheme: light;
+  --ink: #17202a;
+  --muted: #687480;
+  --line: rgba(23, 32, 42, 0.14);
+  --line-strong: rgba(23, 32, 42, 0.26);
+  --accent: #ef6c37;
+  --accent-soft: #fff0e9;
+  --surface: rgba(255, 255, 255, 0.86);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+body { color: var(--ink); }
+
+button { font: inherit; }
+
+.viewer-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 420px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(90deg, transparent 49.95%, rgba(23, 32, 42, 0.045) 50%, transparent 50.05%),
+    linear-gradient(0deg, transparent 49.95%, rgba(23, 32, 42, 0.045) 50%, transparent 50.05%),
+    #fff;
+  background-size: 100% 100%, 100% 100%, auto;
+}
+
+model-viewer {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  --poster-color: #fff;
+  --progress-bar-color: var(--accent);
+  --progress-mask: transparent;
+  background-color: #fff;
+}
+
+.topbar,
+.control-dock,
+.orientation-mark,
+.error-toast {
+  position: absolute;
+  z-index: 2;
+}
+
+.topbar {
+  top: clamp(20px, 4vw, 46px);
+  left: clamp(20px, 4vw, 54px);
+  right: clamp(20px, 4vw, 54px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.identity__eyebrow,
+.control-dock__eyebrow {
+  display: block;
+  color: var(--accent);
+  font: 700 0.68rem/1.2 Consolas, "SFMono-Regular", monospace;
+  letter-spacing: 0.16em;
+}
+
+.identity h1 {
+  margin: 8px 0 2px;
+  font: 700 clamp(1.8rem, 4vw, 3.6rem)/0.9 Consolas, "SFMono-Regular", monospace;
+  letter-spacing: -0.09em;
+}
+
+.identity h1 span { color: var(--accent); }
+
+.identity p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+.load-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font: 700 0.66rem/1 Consolas, "SFMono-Regular", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.load-state__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.load-state.is-ready .load-state__dot {
+  background: #2d9a68;
+  box-shadow: 0 0 0 4px #e5f5ed;
+}
+
+.orientation-mark {
+  right: clamp(24px, 5vw, 72px);
+  top: 50%;
+  width: 88px;
+  height: 88px;
+  transform: translateY(-50%);
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+.orientation-mark__line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38px;
+  height: 1px;
+  transform-origin: left center;
+  background: var(--line-strong);
+}
+
+.orientation-mark__line::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.orientation-mark__line--x { color: #7a8792; transform: rotate(0deg); }
+.orientation-mark__line--y { color: var(--accent); transform: rotate(-90deg); }
+.orientation-mark__line--z { color: #7a8792; transform: rotate(42deg); }
+
+.orientation-mark__label {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 29px);
+  transform: translateX(-50%);
+  color: var(--accent);
+  font: 700 0.62rem/1 Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.control-dock {
+  left: clamp(20px, 4vw, 54px);
+  right: clamp(20px, 4vw, 54px);
+  bottom: clamp(20px, 4vw, 46px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 16px 14px 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 12px 38px rgba(23, 32, 42, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.control-dock__copy strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.control-dock__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.control-button {
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: 700 0.69rem/1 Consolas, "SFMono-Regular", monospace;
+  letter-spacing: 0.02em;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.control-button:hover { border-color: var(--ink); transform: translateY(-1px); }
+.control-button:active { transform: translateY(0); }
+.control-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.control-button--accent { border-color: var(--accent); background: var(--accent); color: #fff; }
+.control-button--accent:hover { border-color: #d95522; background: #d95522; }
+.control-button--accent[aria-pressed="false"] { background: #fff; color: var(--accent); }
+
+.model-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: min(280px, 42vw);
+  height: 2px;
+  transform: translate(-50%, 48px);
+  background: #e7ebee;
+}
+
+.model-progress__value {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms ease;
+}
+
+.error-toast {
+  left: 50%;
+  top: 50%;
+  width: min(440px, calc(100% - 40px));
+  transform: translate(-50%, -50%);
+  padding: 18px 20px;
+  border: 1px solid #e9b5a2;
+  background: #fff8f5;
+  color: #7b321d;
+  box-shadow: 0 20px 60px rgba(23, 32, 42, 0.14);
+}
+
+.error-toast strong,
+.error-toast span { display: block; }
+.error-toast span { margin-top: 6px; color: #99563e; font-size: 0.84rem; line-height: 1.5; }
+
+@media (max-width: 680px) {
+  .topbar { gap: 16px; }
+  .load-state { padding: 9px; }
+  .load-state #load-state-label { display: none; }
+  .orientation-mark { right: 16px; opacity: 0.36; }
+  .control-dock { align-items: stretch; flex-direction: column; gap: 13px; }
+  .control-dock__actions { justify-content: stretch; }
+  .control-button { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-button { transition: none; }
+}
